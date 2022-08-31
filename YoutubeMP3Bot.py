@@ -46,7 +46,7 @@ def download_youtube_mp3_from_video_id(id):
     except:
         print(f'Unable to get title for id {id}. Skipping download.')
         return
-    song_title = re.sub('[/".]','', song_title_raw).strip()
+    song_title = re.sub('[/".|]','', song_title_raw).strip()
     # song_title = re.sub(' +',' ', song_title)
     print(song_title)
     print(song_title_raw)
