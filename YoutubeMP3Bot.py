@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 import os
 from pydub import AudioSegment
+import time
 
 def downloadPlaylist(link):
     # try:
@@ -19,6 +20,7 @@ def downloadPlaylist(link):
         currentUrl = browser.current_url
         download_youtube_mp3_from_video_id(currentUrl)
         browser.find_element(By.XPATH, '/html/body').send_keys(Keys.SHIFT, 'n')
+        time.sleep(1)
 
 
 def download_youtube_mp3_from_video_id(id):
@@ -35,9 +37,9 @@ def download_youtube_mp3_from_video_id(id):
         return
 
     # create condition - if the yt.length > 600 (10 mins), then don't download it
-    if yt.length > 600:
-        print(f"video_id {id} is longer than 10 minutes, will not download.")
-        return
+    # if yt.length > 600:
+    #     print(f"video_id {id} is longer than 10 minutes, will not download.")
+    #     return
 
     # video = yt.streams.filter(only_audio=True).first()
     video = yt.streams.get_audio_only()
@@ -46,7 +48,7 @@ def download_youtube_mp3_from_video_id(id):
     except:
         print(f'Unable to get title for id {id}. Skipping download.')
         return
-    song_title = re.sub('[/".|]','', song_title_raw).strip()
+    song_title = re.sub('[/".|\'*]','', song_title_raw).strip()
     # song_title = re.sub(' +',' ', song_title)
     print(song_title)
     print(song_title_raw)
@@ -83,6 +85,7 @@ def download_youtube_mp3_from_video_id(id):
 
 def setBitrate(file):
     sound = AudioSegment.from_file(file)
+   
     sound.export(file, format="mp3", bitrate='320k')
 
 def setDirectoryBitrate(directory):
@@ -90,8 +93,22 @@ def setDirectoryBitrate(directory):
         file = os.path.join(directory, filename)
         setBitrate(file)
 
+def increaseVolume(song):
+    temp = song
+    song = AudioSegment.from_file(song)
+    while True:
+        choice = int(input("1: Normalize\n2: Increase DB"))
+        if(choice == 1):
+            song = song.normalize()
+            break
+        if(choice == 2):
+            increase = int(input("Increase level DB: "))
+            song = song + increase
+            break
+    song.export(temp, format="mp3", bitrate='320k')
+
 while(True):
-    choice = input("1: Video\n2: Playlist\n3: Set Bitrate\n4: Set directory Bitrate\n")
+    choice = input("1: Single MP3\n2: Playlist MP3\n3: Set Bitrate\n4: Set directory Bitrate\n5: Single MP4\n6: Increase audio volume")
     if(choice == "1"):
         link = input("Link: ")
         download_youtube_mp3_from_video_id(link)
@@ -108,6 +125,15 @@ while(True):
         directory = input("Directory: ")
         setDirectoryBitrate(directory)
         break
+    if(choice == "5"):
+        url = input("URL: ")
+        video = YouTube(url)
+        video = video.streams.get_highest_resolution()
+        video.download()
+        break
+    if(choice == "6"):
+        song = input("song: ")
+        increaseVolume(song)
+        break
     else:
         print("Invalid choice")
-
